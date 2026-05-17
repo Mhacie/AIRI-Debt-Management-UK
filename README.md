@@ -48,4 +48,4 @@ Design Science Research (DSR) methodology following Peffers et al. (2007)
 
 **License**
 
-Academic use only
+Academic use only - Masters in Information Technology Thesis
