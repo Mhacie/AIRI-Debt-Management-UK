@@ -719,7 +719,7 @@ def render_home():
     with col1:
         st.markdown("""
         <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); height: 100%;">
-            <div style="font-size: 2.5em; text-align: center; margin-bottom: 15px;">📊</div>
+            <div style="font-size: 2.5em; text-align: center; margin-bottom: 15px;"></div>
             <h3 style="text-align: center; color: #2c5282;">Self-Assessment</h3>
             <p style="color: #4a5568; text-align: center;">
                 Complete a structured survey across 5 dimensions and 31 indicators to evaluate your organisation's AI readiness.
@@ -730,7 +730,7 @@ def render_home():
     with col2:
         st.markdown("""
         <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); height: 100%;">
-            <div style="font-size: 2.5em; text-align: center; margin-bottom: 15px;">📈</div>
+            <div style="font-size: 2.5em; text-align: center; margin-bottom: 15px;"></div>
             <h3 style="text-align: center; color: #2c5282;">Interactive Dashboard</h3>
             <p style="color: #4a5568; text-align: center;">
                 Visualize your readiness profile with radar charts, gauges, and comparative analytics against industry benchmarks.
@@ -741,7 +741,7 @@ def render_home():
     with col3:
         st.markdown("""
         <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); height: 100%;">
-            <div style="font-size: 2.5em; text-align: center; margin-bottom: 15px;">🎯</div>
+            <div style="font-size: 2.5em; text-align: center; margin-bottom: 15px;"></div>
             <h3 style="text-align: center; color: #2c5282;">Actionable Insights</h3>
             <p style="color: #4a5568; text-align: center;">
                 Receive personalized recommendations based on your readiness band and dimension-specific gap analysis.
@@ -753,7 +753,7 @@ def render_home():
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🚀 Start AIRI Assessment", use_container_width=True):
+        if st.button("Start AIRI Assessment", use_container_width=True):
             st.session_state.page = 'survey'
             st.rerun()
             return  # FIXED: Prevent further execution
@@ -773,7 +773,7 @@ def render_home():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("📋 Conceptual Dimensions")
+        st.subheader("Conceptual Dimensions")
         for name, info in conceptual_dims.items():
             with st.expander(f"{info['code']}: {name}"):
                 st.write(info['description'])
@@ -782,7 +782,7 @@ def render_home():
                     st.write(f"• {ind}")
 
     with col2:
-        st.subheader("🎯 Readiness Bands")
+        st.subheader("Readiness Bands")
         for name, info in bands.items():
             with st.expander(f"{name} ({info['min']}-{info['max']})"):
                 st.markdown(f"""
@@ -801,7 +801,7 @@ def render_survey():
     FIXED: Sliders default to 0, completion tracking, validation.
     """
     st.markdown("""
-    <h1 style="color: #1e3a5f;">📋 AIRI Expert Assessment Survey</h1>
+    <h1 style="color: #1e3a5f;">AIRI Expert Assessment Survey</h1>
     <p style="color: #4a5568; font-size: 1.1em;">
         Please rate your organisation's current capability for each indicator on a scale of 0-8, 
         where <strong>0 = Not implemented/No capability</strong> and <strong>8 = Fully optimized/Industry leading</strong>.
@@ -869,7 +869,7 @@ def render_survey():
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("📊 Calculate AIRI Score", use_container_width=True, type="primary"):
+        if st.button("Calculate AIRI Score", use_container_width=True, type="primary"):
             if role == "Select..." or experience == "Select..." or org_size == "Select...":
                 st.error("Please complete all respondent information fields.")
             else:
@@ -921,7 +921,7 @@ def render_results():
 
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); padding: 30px; border-radius: 15px; margin-bottom: 30px;">
-        <h1 style="color: white; margin: 0;">📊 Your AIRI Assessment Results</h1>
+        <h1 style="color: white; margin: 0;">Your AIRI Assessment Results</h1>
         <p style="color: #bee3f8; font-size: 1.1em; margin: 10px 0 0 0;">
             Assessment completed on {datetime.now().strftime('%B %d, %Y')}
         </p>
@@ -984,13 +984,13 @@ def render_results():
             use_container_width=True
         )
 
-    st.subheader("📊 Dimension Score Breakdown")
+    st.subheader("Dimension Score Breakdown")
     st.plotly_chart(
         create_dimension_bar_chart(dimension_scores),
         use_container_width=True
     )
 
-    st.subheader("🔍 Dimension Impact Analysis (Deviation from Mean)")
+    st.subheader("Dimension Impact Analysis (Deviation from Mean)")
     st.plotly_chart(
         create_shap_style_importance(dimension_scores),
         use_container_width=True
@@ -999,7 +999,7 @@ def render_results():
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, {band_info['color']} 0%, white 100%); padding: 25px; border-radius: 12px; border-left: 5px solid {band_info['dark_color']};">
-        <h3 style="color: {band_info['dark_color']}; margin-top: 0;">🎯 Recommendations for {band} Organisations</h3>
+        <h3 style="color: {band_info['dark_color']}; margin-top: 0;">Recommendations for {band} Organisations</h3>
         <p style="color: #4a5568; font-size: 1.05em;">{band_info['description']}</p>
     </div>
     """, unsafe_allow_html=True)
@@ -1009,7 +1009,7 @@ def render_results():
         st.write(f"{i}. {rec}")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("📉 Gap Analysis")
+    st.subheader("Gap Analysis")
 
     gap_data = []
     for dim, score in dimension_scores.items():
@@ -1046,7 +1046,7 @@ def render_results():
             return
 
     with col2:
-        if st.button("📊 View Aggregate Dashboard", use_container_width=True):
+        if st.button("View Aggregate Dashboard", use_container_width=True):
             st.session_state.page = 'dashboard'
             st.rerun()
             return
@@ -1095,7 +1095,7 @@ def render_dashboard():
     """
     st.markdown("""
     <div style="background: linear-gradient(135deg, #2c5282 0%, #1e3a5f 100%); padding: 30px; border-radius: 15px; margin-bottom: 30px;">
-        <h1 style="color: white; margin: 0;">📈 AIRI Aggregate Analytics Dashboard</h1>
+        <h1 style="color: white; margin: 0;">AIRI Aggregate Analytics Dashboard</h1>
         <p style="color: #bee3f8; font-size: 1.1em; margin: 10px 0 0 0;">
             Comparative analysis across all assessed organisations
         </p>
@@ -1143,7 +1143,7 @@ def render_dashboard():
 
     df = pd.DataFrame(all_responses)
 
-    st.subheader("📊 Cohort Overview")
+    st.subheader("Cohort Overview")
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -1161,7 +1161,7 @@ def render_dashboard():
         use_container_width=True
     )
 
-    st.subheader("🎯 Readiness Band Distribution")
+    st.subheader("Readiness Band Distribution")
     band_counts = df['AIRI_band'].value_counts().reset_index()
     band_counts.columns = ['Band', 'Count']
 
@@ -1184,7 +1184,7 @@ def render_dashboard():
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("📊 Dimension Comparison (Cohort Average)")
+    st.subheader("Dimension Comparison (Cohort Average)")
 
     dim_cols = ['Strategy_Governance', 'Data_Technology', 'People_Skills', 'Risk_Ethics']
     avg_dims = df[dim_cols].mean().to_dict()
@@ -1213,13 +1213,13 @@ def render_dashboard():
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("🔬 Advanced Analytics: PCA & Clustering")
+    st.subheader("Advanced Analytics: PCA & Clustering")
     st.plotly_chart(
         create_pca_scatter(df),
         use_container_width=True
     )
 
-    st.subheader("📋 Assessment Records")
+    st.subheader("Assessment Records")
     display_df = df[['respondent_id', 'timestamp', 'AIRI_composite', 'AIRI_band'] + dim_cols].copy()
     display_df.columns = ['ID', 'Date', 'Composite Score', 'Band'] + [c.replace('_', ' ') for c in dim_cols]
     st.dataframe(display_df, use_container_width=True, hide_index=True)
@@ -1270,12 +1270,12 @@ def main():
             st.rerun()
             return
 
-        if st.button("📋 Take Assessment", use_container_width=True):
+        if st.button("Take Assessment", use_container_width=True):
             st.session_state.page = 'survey'
             st.rerun()
             return
 
-        if st.button("📊 My Results", use_container_width=True):
+        if st.button("My Results", use_container_width=True):
             # FIXED: Use boolean flag instead of score > 0
             if st.session_state.assessment_complete and st.session_state.dimension_scores:
                 st.session_state.page = 'results'
@@ -1284,7 +1284,7 @@ def main():
             else:
                 st.warning("Complete an assessment first!")
 
-        if st.button("📈 Analytics Dashboard", use_container_width=True):
+        if st.button("Analytics Dashboard", use_container_width=True):
             st.session_state.page = 'dashboard'
             st.rerun()
             return
