@@ -434,8 +434,8 @@ def create_dimension_bar_chart(dimension_scores):
         )
 
     fig.update_layout(
-        xaxis=dict(range=[0, 100], title="Score (0-100)", title_font=dict(size=14), tickfont=dict(size=12)),
-        yaxis=dict(title="", tickfont=dict(size=13)),
+        xaxis=dict(range=[0, 100], title=dict(text="Score (0-100)", font=dict(size=14)), tickfont=dict(size=12)),
+        yaxis=dict(tickfont=dict(size=13)),
         title=dict(text="Dimension Score Breakdown", font=dict(size=18, color='#1e3a5f'), x=0.5),
         plot_bgcolor='white',
         paper_bgcolor='white',
@@ -513,8 +513,8 @@ def create_readiness_distribution_chart(all_scores):
 
     fig.update_layout(
         title=dict(text="Distribution of AIRI Composite Scores", font=dict(size=18, color='#1e3a5f'), x=0.5),
-        xaxis=dict(title="AIRI Composite Score", range=[0, 100], tickfont=dict(size=12)),
-        yaxis=dict(title="Number of Organisations", tickfont=dict(size=12)),
+        xaxis=dict(title=dict(text="AIRI Composite Score"), range=[0, 100], tickfont=dict(size=12)),
+        yaxis=dict(title=dict(text="Number of Organisations"), tickfont=dict(size=12)),
         plot_bgcolor='white',
         paper_bgcolor='white',
         height=400,
@@ -552,8 +552,8 @@ def create_shap_style_importance(dimension_scores):
 
     fig.update_layout(
         title=dict(text="Dimension Impact on Readiness (Deviation from Mean)", font=dict(size=18, color='#1e3a5f'), x=0.5),
-        xaxis=dict(title="Impact on Composite Score", tickfont=dict(size=12), zeroline=True, zerolinecolor='black', zerolinewidth=2),
-        yaxis=dict(title="", tickfont=dict(size=13)),
+        xaxis=dict(title=dict(text="Impact on Composite Score"), tickfont=dict(size=12), zeroline=True, zerolinecolor='black', zerolinewidth=2),
+        yaxis=dict(tickfont=dict(size=13)),
         plot_bgcolor='white',
         paper_bgcolor='white',
         height=350,
@@ -620,8 +620,8 @@ def create_pca_scatter(all_responses_df):
 
     fig.update_layout(
         title=dict(text="PCA: Readiness Structure & Clustering", font=dict(size=18, color='#1e3a5f'), x=0.5),
-        xaxis=dict(title=f"PC1 ({pca.explained_variance_ratio_[0]:.1%} variance)", tickfont=dict(size=12)),
-        yaxis=dict(title=f"PC2 ({pca.explained_variance_ratio_[1]:.1%} variance)", tickfont=dict(size=12)),
+        xaxis=dict(title=dict(text=f"PC1 ({pca.explained_variance_ratio_[0]:.1%} variance)"), tickfont=dict(size=12)),
+        yaxis=dict(title=dict(text=f"PC2 ({pca.explained_variance_ratio_[1]:.1%} variance)"), tickfont=dict(size=12)),
         plot_bgcolor='white',
         paper_bgcolor='white',
         height=500
@@ -652,38 +652,7 @@ def init_session_state():
         st.session_state.assessment_complete = False
 
     if 'all_responses' not in st.session_state:
-        st.session_state.all_responses = [
-            {
-                'respondent_id': 'DEMO_001',
-                'timestamp': '2025-04-15',
-                'Strategy_Governance': 12.50,
-                'Data_Technology': 13.75,
-                'People_Skills': 12.50,
-                'Risk_Ethics': 13.64,
-                'AIRI_composite': 13.10,
-                'AIRI_band': 'Nascent'
-            },
-            {
-                'respondent_id': 'DEMO_002',
-                'timestamp': '2025-04-16',
-                'Strategy_Governance': 32.81,
-                'Data_Technology': 21.25,
-                'People_Skills': 30.00,
-                'Risk_Ethics': 38.64,
-                'AIRI_composite': 30.67,
-                'AIRI_band': 'Developing'
-            },
-            {
-                'respondent_id': 'DEMO_003',
-                'timestamp': '2025-04-17',
-                'Strategy_Governance': 23.44,
-                'Data_Technology': 26.25,
-                'People_Skills': 25.00,
-                'Risk_Ethics': 15.91,
-                'AIRI_composite': 22.65,
-                'AIRI_band': 'Nascent'
-            }
-        ]
+        st.session_state.all_responses = []  # No longer stores user data (privacy)
 
     if 'page' not in st.session_state:
         st.session_state.page = 'home'
@@ -691,45 +660,36 @@ def init_session_state():
 
 def save_response_to_session(responses, dimension_scores, composite_score):
     """
-    Saves a completed survey response to the session state.
+    Saves a completed survey response to a backend text file.
+    Does NOT store in session state aggregate data (privacy).
     """
     band = classify_readiness_band(composite_score)
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    response_record = {
-        'respondent_id': f"RESP_{len(st.session_state.all_responses) + 1:03d}",
-        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        **dimension_scores,
-        'AIRI_composite': composite_score,
-        'AIRI_band': band
-    }
-
-    st.session_state.all_responses.append(response_record)
+    # Save to session state for current user only
     st.session_state.responses = responses
     st.session_state.dimension_scores = dimension_scores
     st.session_state.composite_score = composite_score
-    # FIXED: Set completion flag
     st.session_state.assessment_complete = True
+
+    # Write to backend text file (append mode) - using string concatenation, NOT f-strings with newlines
+    try:
+        with open('airi_responses.txt', 'a', encoding='utf-8') as f:
+            f.write("=== AIRI Assessment | " + timestamp + " ===" + "\n")
+            f.write("Composite Score: " + str(round(composite_score, 2)) + " | Band: " + band + "\n")
+            for dim, score in dimension_scores.items():
+                f.write("  " + dim + ": " + str(round(score, 2)) + "\n")
+            f.write("Raw Responses: " + json.dumps(responses) + "\n")
+            f.write("-" * 50 + "\n\n")
+    except Exception as e:
+        st.error("Failed to save to backend file: " + str(e))
 
 
 def clear_assessment():
     """
-    Clears the current user's assessment data from session state
-    and removes their record from the aggregate dataset.
+    Clears the current user's assessment data from session state.
+    Does NOT delete backend text file records (audit trail preserved).
     """
-    # Remove from all_responses if current response exists
-    current_id = None
-    for resp in st.session_state.all_responses:
-        if resp.get('respondent_id', '').startswith('RESP_'):
-            # Find the most recent response (current user's)
-            current_id = resp['respondent_id']
-
-    if current_id:
-        st.session_state.all_responses = [
-            r for r in st.session_state.all_responses 
-            if r['respondent_id'] != current_id
-        ]
-
-    # Reset current session assessment data
     st.session_state.responses = {}
     st.session_state.dimension_scores = {}
     st.session_state.composite_score = 0
@@ -759,7 +719,7 @@ def render_home():
     with col1:
         st.markdown("""
         <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); height: 100%;">
-            <div style="font-size: 2.5em; text-align: center; margin-bottom: 15px;"></div>
+            <div style="font-size: 2.5em; text-align: center; margin-bottom: 15px;">📊</div>
             <h3 style="text-align: center; color: #2c5282;">Self-Assessment</h3>
             <p style="color: #4a5568; text-align: center;">
                 Complete a structured survey across 5 dimensions and 31 indicators to evaluate your organisation's AI readiness.
@@ -770,7 +730,7 @@ def render_home():
     with col2:
         st.markdown("""
         <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); height: 100%;">
-            <div style="font-size: 2.5em; text-align: center; margin-bottom: 15px;"></div>
+            <div style="font-size: 2.5em; text-align: center; margin-bottom: 15px;">📈</div>
             <h3 style="text-align: center; color: #2c5282;">Interactive Dashboard</h3>
             <p style="color: #4a5568; text-align: center;">
                 Visualize your readiness profile with radar charts, gauges, and comparative analytics against industry benchmarks.
@@ -781,7 +741,7 @@ def render_home():
     with col3:
         st.markdown("""
         <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); height: 100%;">
-            <div style="font-size: 2.5em; text-align: center; margin-bottom: 15px;"></div>
+            <div style="font-size: 2.5em; text-align: center; margin-bottom: 15px;">🎯</div>
             <h3 style="text-align: center; color: #2c5282;">Actionable Insights</h3>
             <p style="color: #4a5568; text-align: center;">
                 Receive personalized recommendations based on your readiness band and dimension-specific gap analysis.
@@ -793,7 +753,7 @@ def render_home():
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("Start AIRI Assessment", use_container_width=True):
+        if st.button("🚀 Start AIRI Assessment", use_container_width=True):
             st.session_state.page = 'survey'
             st.rerun()
             return  # FIXED: Prevent further execution
@@ -813,7 +773,7 @@ def render_home():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("Conceptual Dimensions")
+        st.subheader("📋 Conceptual Dimensions")
         for name, info in conceptual_dims.items():
             with st.expander(f"{info['code']}: {name}"):
                 st.write(info['description'])
@@ -822,7 +782,7 @@ def render_home():
                     st.write(f"• {ind}")
 
     with col2:
-        st.subheader("Readiness Bands")
+        st.subheader("🎯 Readiness Bands")
         for name, info in bands.items():
             with st.expander(f"{name} ({info['min']}-{info['max']})"):
                 st.markdown(f"""
@@ -841,7 +801,7 @@ def render_survey():
     FIXED: Sliders default to 0, completion tracking, validation.
     """
     st.markdown("""
-    <h1 style="color: #1e3a5f;">AIRI Expert Assessment Survey</h1>
+    <h1 style="color: #1e3a5f;">📋 AIRI Expert Assessment Survey</h1>
     <p style="color: #4a5568; font-size: 1.1em;">
         Please rate your organisation's current capability for each indicator on a scale of 0-8, 
         where <strong>0 = Not implemented/No capability</strong> and <strong>8 = Fully optimized/Industry leading</strong>.
@@ -909,7 +869,7 @@ def render_survey():
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("Calculate AIRI Score", use_container_width=True, type="primary"):
+        if st.button("📊 Calculate AIRI Score", use_container_width=True, type="primary"):
             if role == "Select..." or experience == "Select..." or org_size == "Select...":
                 st.error("Please complete all respondent information fields.")
             else:
@@ -946,7 +906,7 @@ def render_results():
     """
     # Guard: redirect if no assessment data exists
     if not st.session_state.get('assessment_complete', False) or not st.session_state.dimension_scores:
-        st.warning("⚠️ No assessment data found. Please complete the survey first.")
+        st.warning("No assessment data found. Please complete the survey first.")
         if st.button("Go to Survey", use_container_width=True):
             st.session_state.page = 'survey'
             st.rerun()
@@ -961,7 +921,7 @@ def render_results():
 
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); padding: 30px; border-radius: 15px; margin-bottom: 30px;">
-        <h1 style="color: white; margin: 0;">Your AIRI Assessment Results</h1>
+        <h1 style="color: white; margin: 0;">📊 Your AIRI Assessment Results</h1>
         <p style="color: #bee3f8; font-size: 1.1em; margin: 10px 0 0 0;">
             Assessment completed on {datetime.now().strftime('%B %d, %Y')}
         </p>
@@ -1024,7 +984,7 @@ def render_results():
             use_container_width=True
         )
 
-    st.subheader("Dimension Score Breakdown")
+    st.subheader("📊 Dimension Score Breakdown")
     st.plotly_chart(
         create_dimension_bar_chart(dimension_scores),
         use_container_width=True
@@ -1039,7 +999,7 @@ def render_results():
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, {band_info['color']} 0%, white 100%); padding: 25px; border-radius: 12px; border-left: 5px solid {band_info['dark_color']};">
-        <h3 style="color: {band_info['dark_color']}; margin-top: 0;">Recommendations for {band} Organisations</h3>
+        <h3 style="color: {band_info['dark_color']}; margin-top: 0;">🎯 Recommendations for {band} Organisations</h3>
         <p style="color: #4a5568; font-size: 1.05em;">{band_info['description']}</p>
     </div>
     """, unsafe_allow_html=True)
@@ -1049,7 +1009,7 @@ def render_results():
         st.write(f"{i}. {rec}")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("Gap Analysis")
+    st.subheader("📉 Gap Analysis")
 
     gap_data = []
     for dim, score in dimension_scores.items():
@@ -1063,11 +1023,18 @@ def render_results():
         })
 
     gap_df = pd.DataFrame(gap_data)
-    st.dataframe(
-        gap_df.style.background_gradient(subset=['Gap'], cmap='Reds'),
-        use_container_width=True,
-        hide_index=True
-    )
+
+    # Color-code gap values manually (no matplotlib dependency)
+    def color_gap(val):
+        if val > 60:
+            return 'background-color: #fed7d7; color: #c53030; font-weight: bold;'
+        elif val > 40:
+            return 'background-color: #feebc8; color: #c05621;'
+        else:
+            return 'background-color: #c6f6d5; color: #276749;'
+
+    styled_gap = gap_df.style.map(color_gap, subset=['Gap'])
+    st.dataframe(styled_gap, use_container_width=True, hide_index=True)
 
     st.markdown("<br><hr>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
@@ -1079,7 +1046,7 @@ def render_results():
             return
 
     with col2:
-        if st.button("View Aggregate Dashboard", use_container_width=True):
+        if st.button("📊 View Aggregate Dashboard", use_container_width=True):
             st.session_state.page = 'dashboard'
             st.rerun()
             return
@@ -1109,14 +1076,14 @@ def render_results():
         st.warning("This will permanently delete your assessment record from this session.")
         col_confirm1, col_confirm2 = st.columns(2)
         with col_confirm1:
-            if st.button("✅ Yes, Clear My Data", use_container_width=True, type="primary"):
+            if st.button("Yes, Clear My Data", use_container_width=True, type="primary"):
                 clear_assessment()
-                st.success("✅ Assessment data cleared successfully!")
+                st.success("Assessment data cleared successfully!")
                 st.session_state.page = 'home'
                 st.rerun()
                 return
         with col_confirm2:
-            if st.button("❌ Cancel", use_container_width=True):
+            if st.button("Cancel", use_container_width=True):
                 st.rerun()
                 return
 
@@ -1124,17 +1091,47 @@ def render_results():
 def render_dashboard():
     """
     Renders the aggregate analytics dashboard.
+    Reads data from backend text file instead of session state.
     """
     st.markdown("""
     <div style="background: linear-gradient(135deg, #2c5282 0%, #1e3a5f 100%); padding: 30px; border-radius: 15px; margin-bottom: 30px;">
-        <h1 style="color: white; margin: 0;">AIRI Aggregate Analytics Dashboard</h1>
+        <h1 style="color: white; margin: 0;">📈 AIRI Aggregate Analytics Dashboard</h1>
         <p style="color: #bee3f8; font-size: 1.1em; margin: 10px 0 0 0;">
             Comparative analysis across all assessed organisations
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    all_responses = st.session_state.all_responses
+    # Load data from backend text file
+    all_responses = []
+    try:
+        if os.path.exists('airi_responses.txt'):
+            with open('airi_responses.txt', 'r', encoding='utf-8') as f:
+                content = f.read()
+                # Parse simple text format back to records
+                records = content.split('=== AIRI Assessment | ')
+                for rec in records[1:]:
+                    lines = rec.strip().split('\n')
+                    timestamp = lines[0].replace('===', '').strip()
+                    score_line = lines[1]
+                    composite = float(score_line.split('|')[0].split(':')[1].strip())
+                    band = score_line.split('|')[1].split(':')[1].strip()
+
+                    dim_scores = {}
+                    for line in lines[2:]:
+                        if line.startswith('  ') and ':' in line and not line.startswith('  Raw'):
+                            parts = line.strip().split(':')
+                            dim_scores[parts[0].strip()] = float(parts[1].strip())
+
+                    all_responses.append({
+                        'respondent_id': "FILE_" + str(len(all_responses)+1).zfill(3),
+                        'timestamp': timestamp,
+                        **dim_scores,
+                        'AIRI_composite': composite,
+                        'AIRI_band': band
+                    })
+    except Exception as e:
+        st.error("Error reading backend file: " + str(e))
 
     if len(all_responses) == 0:
         st.warning("No assessment data available yet. Complete a survey to see analytics.")
@@ -1146,7 +1143,7 @@ def render_dashboard():
 
     df = pd.DataFrame(all_responses)
 
-    st.subheader("Cohort Overview")
+    st.subheader("📊 Cohort Overview")
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -1164,7 +1161,7 @@ def render_dashboard():
         use_container_width=True
     )
 
-    st.subheader("Readiness Band Distribution")
+    st.subheader("🎯 Readiness Band Distribution")
     band_counts = df['AIRI_band'].value_counts().reset_index()
     band_counts.columns = ['Band', 'Count']
 
@@ -1187,7 +1184,7 @@ def render_dashboard():
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("Dimension Comparison (Cohort Average)")
+    st.subheader("📊 Dimension Comparison (Cohort Average)")
 
     dim_cols = ['Strategy_Governance', 'Data_Technology', 'People_Skills', 'Risk_Ethics']
     avg_dims = df[dim_cols].mean().to_dict()
@@ -1209,20 +1206,20 @@ def render_dashboard():
 
     fig.update_layout(
         title=dict(text="Dimension Score Distribution", x=0.5),
-        yaxis=dict(title="Score (0-100)", range=[0, 100]),
+        yaxis=dict(title=dict(text="Score (0-100)"), range=[0, 100]),
         height=450,
         plot_bgcolor='white',
         paper_bgcolor='white'
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    st.subheader("Advanced Analytics: PCA & Clustering")
+    st.subheader("🔬 Advanced Analytics: PCA & Clustering")
     st.plotly_chart(
         create_pca_scatter(df),
         use_container_width=True
     )
 
-    st.subheader("Assessment Records")
+    st.subheader("📋 Assessment Records")
     display_df = df[['respondent_id', 'timestamp', 'AIRI_composite', 'AIRI_band'] + dim_cols].copy()
     display_df.columns = ['ID', 'Date', 'Composite Score', 'Band'] + [c.replace('_', ' ') for c in dim_cols]
     st.dataframe(display_df, use_container_width=True, hide_index=True)
@@ -1273,21 +1270,21 @@ def main():
             st.rerun()
             return
 
-        if st.button("Take Assessment", use_container_width=True):
+        if st.button("📋 Take Assessment", use_container_width=True):
             st.session_state.page = 'survey'
             st.rerun()
             return
 
-        if st.button("My Results", use_container_width=True):
+        if st.button("📊 My Results", use_container_width=True):
             # FIXED: Use boolean flag instead of score > 0
             if st.session_state.assessment_complete and st.session_state.dimension_scores:
                 st.session_state.page = 'results'
                 st.rerun()
                 return
             else:
-                st.warning("⚠️ Complete an assessment first!")
+                st.warning("Complete an assessment first!")
 
-        if st.button("Analytics Dashboard", use_container_width=True):
+        if st.button("📈 Analytics Dashboard", use_container_width=True):
             st.session_state.page = 'dashboard'
             st.rerun()
             return
