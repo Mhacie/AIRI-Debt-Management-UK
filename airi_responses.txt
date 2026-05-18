@@ -1,0 +1,8 @@
+=== AIRI Assessment | 2025-05-18 14:30:00 ===
+Composite Score: 45.50 | Band: Developing
+  Strategy_Governance: 52.00
+  Data_Technology: 38.00
+  People_Skills: 41.00
+  Risk_Ethics: 51.00
+Raw Responses: {"Q27": 5, "Q28": 4, ...}
+--------------------------------------------------
